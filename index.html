@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Covenant — Milestone-Gated Grants · GenLayer Bradbury</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0a0704; --surface: #161009; --border: #2b2013; --accent: #f0b429; --accent2: #ff8a4c; --text: #f1e9db; --muted: #6b5f4d; --mono: 'Share Tech Mono', monospace; --sans: 'Syne', sans-serif; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+  body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(240,180,41,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(240,180,41,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+  .container { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 0 24px 80px; }
+  header { padding: 40px 0 32px; border-bottom: 1px solid var(--border); margin-bottom: 32px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+  .header-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; color: var(--accent); border: 1px solid rgba(240,180,41,0.3); padding: 4px 12px; border-radius: 2px; margin-bottom: 16px; letter-spacing: 0.1em; }
+  .dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  h1 { font-size: clamp(24px, 5vw, 36px); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px; color: var(--accent); }
+  .subtitle { font-family: var(--mono); font-size: 12px; color: var(--muted); max-width: 480px; }
+  button.wallet { font-family: var(--mono); font-size: 12px; background: transparent; color: var(--text); border: 1px solid var(--border); padding: 10px 16px; border-radius: 2px; cursor: pointer; white-space: nowrap; }
+  button.wallet.connected { border-color: var(--accent); color: var(--accent); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 24px; margin-bottom: 24px; }
+  .card h2 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .card .hint { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
+  label { display: block; font-family: var(--mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; margin-top: 14px; }
+  label:first-of-type { margin-top: 0; }
+  input, textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); font-size: 13px; padding: 10px 12px; border-radius: 2px; outline: none; }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 50px; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  button.primary { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; padding: 11px 20px; border-radius: 2px; border: none; cursor: pointer; background: var(--accent); color: var(--bg); font-weight: 700; }
+  button.primary:hover { background: #ffc555; }
+  button.primary.orange { background: var(--accent2); } button.primary.orange:hover { background: #ff9d6b; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .output { margin-top: 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 2px; padding: 12px 14px; font-family: var(--mono); font-size: 12px; line-height: 1.7; display: none; word-break: break-word; }
+  .output.visible { display: block; }
+  .output.success { color: var(--accent); border-color: rgba(240,180,41,0.2); }
+  .output.error { color: #ef4444; border-color: rgba(239,68,68,0.2); }
+  .output.info { color: var(--accent2); }
+  footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  footer a { color: var(--muted); text-decoration: none; } footer a:hover { color: var(--accent); }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); padding: 12px 18px; border-radius: 2px; font-family: var(--mono); font-size: 12px; z-index: 10; display: none; }
+  .toast.visible { display: block; }
+  .toast.success { border-color: var(--accent); color: var(--accent); }
+  .toast.error { border-color: #ef4444; color: #ef4444; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <div class="header-badge"><div class="dot"></div>BRADBURY TESTNET · PHASE 1</div>
+      <h1>Covenant</h1>
+      <p class="subtitle">Milestone-gated grants. Funds release when leader and validator independently agree the evidence supports the claim — not on a calendar.</p>
+    </div>
+    <button class="wallet" id="walletBtn" onclick="connectWallet()">Connect Wallet</button>
+  </header>
+
+  <div class="card">
+    <h2>Create a Grant</h2>
+    <p class="hint">Registers you as grantor for a recipient. No funds move yet — fund individual milestones afterward with Add Tranche.</p>
+    <label>Recipient Address</label>
+    <input id="recipientAddr" placeholder="0x...">
+    <div class="btn-row">
+      <button class="primary" onclick="createGrant()">Create Grant</button>
+    </div>
+    <div class="output" id="create-out"></div>
+  </div>
+
+  <div class="card">
+    <h2>Look Up a Grant / Tranche</h2>
+    <p class="hint"><span id="grantCountHint">Checking total grants…</span></p>
+    <div class="row">
+      <div>
+        <label>Grant ID</label>
+        <input id="lookupGrantId" placeholder="0" value="0">
+      </div>
+      <div>
+        <label>Tranche ID (optional)</label>
+        <input id="lookupTrancheId" placeholder="leave blank for grant only">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="primary orange" onclick="lookupGrant()">Get Grant</button>
+      <button class="primary orange" onclick="lookupTranche()">Get Tranche</button>
+    </div>
+    <div class="output" id="lookup-out"></div>
+  </div>
+
+  <div class="card">
+    <h2>Add a Tranche</h2>
+    <p class="hint">Only the grantor. Escrows real GEN, released only once the milestone is independently verified.</p>
+    <label>Grant ID</label>
+    <input id="trancheGrantId" placeholder="0" value="0">
+    <label>Milestone Description</label>
+    <textarea id="trancheDesc" placeholder="What must be true for this tranche to release?"></textarea>
+    <label>Evidence URL</label>
+    <input id="trancheEvidence" placeholder="https://... — leader and validator fetch this independently">
+    <label>Escrow (GEN)</label>
+    <input id="trancheAmount" placeholder="1" value="1">
+    <div class="btn-row">
+      <button class="primary" onclick="addTranche()">Add Tranche</button>
+    </div>
+    <div class="output" id="add-out"></div>
+  </div>
+
+  <div class="card">
+    <h2>Claim a Tranche</h2>
+    <p class="hint">Only the recipient. Triggers leader + validator to independently judge the evidence.</p>
+    <div class="row">
+      <div>
+        <label>Grant ID</label>
+        <input id="claimGrantId" placeholder="0" value="0">
+      </div>
+      <div>
+        <label>Tranche ID</label>
+        <input id="claimTrancheId" placeholder="0" value="0">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="primary orange" onclick="claimTranche()">Claim</button>
+    </div>
+    <div class="output" id="claim-out"></div>
+  </div>
+
+  <div class="card">
+    <h2>Cancel a Tranche</h2>
+    <p class="hint">Only the grantor, only while still open. Refunds the escrow to you.</p>
+    <div class="row">
+      <div>
+        <label>Grant ID</label>
+        <input id="cancelGrantId" placeholder="0" value="0">
+      </div>
+      <div>
+        <label>Tranche ID</label>
+        <input id="cancelTrancheId" placeholder="0" value="0">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="primary" onclick="cancelTranche()">Cancel</button>
+    </div>
+    <div class="output" id="cancel-out"></div>
+  </div>
+
+  <footer>
+    <span>Built by <a href="https://github.com/lau90eth" target="_blank">lau90eth</a> · GenLayer Builders Program</span>
+    <span><a href="https://github.com/lau90eth/covenant" target="_blank">github.com/lau90eth/covenant</a></span>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+const CONTRACT = '0x3E5e258FA394fC9f51f5593728F8B06705AdC197';
+
+let glClient = null;
+let walletAddress = null;
+
+async function initClient() {
+  if (glClient) return glClient;
+  const { createClient } = await import('https://esm.sh/genlayer-js@1.1.7');
+  const { testnetBradbury } = await import('https://esm.sh/genlayer-js@1.1.7/chains');
+  glClient = createClient({ chain: testnetBradbury });
+  return glClient;
+}
+
+function out(id, msg, type = 'info') {
+  const el = document.getElementById(id);
+  el.className = `output visible ${type}`;
+  el.innerHTML = msg;
+}
+
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.className = `toast visible ${type}`;
+  el.textContent = msg;
+  setTimeout(() => el.classList.remove('visible'), 5000);
+}
+
+window.connectWallet = async function() {
+  if (!window.ethereum) { toast('MetaMask not found', 'error'); return; }
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    walletAddress = accounts[0];
+    const chainIdHex = '0x' + (4221).toString(16);
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: chainIdHex }] });
+    } catch (e) {
+      if (e.code === 4902 || e.code === -32603) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{ chainId: chainIdHex, chainName: 'GenLayer Bradbury Testnet', rpcUrls: ['https://rpc-bradbury.genlayer.com'], nativeCurrency: { name: 'GEN', symbol: 'GEN', decimals: 18 }, blockExplorerUrls: ['https://explorer-bradbury.genlayer.com'] }]
+        });
+      }
+    }
+    const btn = document.getElementById('walletBtn');
+    btn.textContent = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+    btn.classList.add('connected');
+    toast('Wallet connected', 'success');
+  } catch (e) { toast('Connection failed', 'error'); }
+};
+
+async function writeTx(functionName, args, valueGen) {
+  const c = await initClient();
+  if (!walletAddress) throw new Error('Connect wallet first');
+  const params = { account: { address: walletAddress, type: 'json-rpc' }, address: CONTRACT, functionName, args };
+  if (valueGen && Number(valueGen) > 0) {
+    params.value = BigInt(Math.round(Number(valueGen) * 1e18));
+  }
+  return await c.writeContract(params);
+}
+
+async function readCall(functionName, args) {
+  const c = await initClient();
+  return await c.readContract({ address: CONTRACT, functionName, args });
+}
+
+window.createGrant = async function() {
+  const recipient = document.getElementById('recipientAddr').value.trim();
+  if (!recipient) { toast('Enter a recipient address', 'error'); return; }
+  try {
+    const hash = await writeTx('create_grant', [recipient]);
+    out('create-out', `Grant created. TX: ${hash}`, 'success');
+    toast('Grant created', 'success');
+    refreshCount();
+  } catch (e) {
+    console.error(e);
+    out('create-out', 'Error: ' + e.message.slice(0, 200), 'error');
+  }
+};
+
+window.lookupGrant = async function() {
+  const gid = document.getElementById('lookupGrantId').value.trim();
+  try {
+    const result = await readCall('get_grant', [gid]);
+    out('lookup-out', result, 'info');
+  } catch (e) {
+    out('lookup-out', 'Error: ' + e.message.slice(0, 200), 'error');
+  }
+};
+
+window.lookupTranche = async function() {
+  const gid = document.getElementById('lookupGrantId').value.trim();
+  const tid = document.getElementById('lookupTrancheId').value.trim();
+  if (tid === '') { toast('Enter a tranche ID', 'error'); return; }
+  try {
+    const result = await readCall('get_tranche', [gid, tid]);
+    out('lookup-out', result, 'info');
+  } catch (e) {
+    out('lookup-out', 'Error: ' + e.message.slice(0, 200), 'error');
+  }
+};
+
+window.addTranche = async function() {
+  const gid = document.getElementById('trancheGrantId').value.trim();
+  const description = document.getElementById('trancheDesc').value.trim();
+  const evidence = document.getElementById('trancheEvidence').value.trim();
+  const amount = document.getElementById('trancheAmount').value.trim();
+  if (!description || !evidence || !amount || Number(amount) <= 0) { toast('Fill all fields', 'error'); return; }
+  try {
+    const hash = await writeTx('add_tranche', [gid, description, evidence], amount);
+    out('add-out', `Tranche added, ${amount} GEN escrowed. TX: ${hash}`, 'success');
+    toast('Tranche added', 'success');
+  } catch (e) {
+    console.error(e);
+    out('add-out', 'Error: ' + e.message.slice(0, 200), 'error');
+  }
+};
+
+window.claimTranche = async function() {
+  const gid = document.getElementById('claimGrantId').value.trim();
+  const tid = document.getElementById('claimTrancheId').value.trim();
+  try {
+    const hash = await writeTx('claim_tranche', [gid, tid]);
+    out('claim-out', `Claim submitted. TX: ${hash}. This runs leader+validator LLM calls — check back in under a minute.`, 'success');
+    toast('Claim submitted', 'success');
+  } catch (e) {
+    console.error(e);
+    out('claim-out', 'Error: ' + e.message.slice(0, 200), 'error');
+  }
+};
+
+window.cancelTranche = async function() {
+  const gid = document.getElementById('cancelGrantId').value.trim();
+  const tid = document.getElementById('cancelTrancheId').value.trim();
+  try {
+    const hash = await writeTx('cancel_tranche', [gid, tid]);
+    out('cancel-out', `Cancelled, escrow refunded. TX: ${hash}`, 'success');
+    toast('Tranche cancelled', 'success');
+  } catch (e) {
+    console.error(e);
+    out('cancel-out', 'Error: ' + e.message.slice(0, 200), 'error');
+  }
+};
+
+async function refreshCount() {
+  try {
+    const count = await readCall('get_grant_count', []);
+    document.getElementById('grantCountHint').textContent = `${count} grant(s) exist so far — valid IDs are 0 to ${Number(count) - 1}.`;
+  } catch (e) {
+    document.getElementById('grantCountHint').textContent = 'Could not load grant count.';
+  }
+}
+
+refreshCount();
+</script>
+</body>
+</html>
